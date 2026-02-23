@@ -1,184 +1,65 @@
-<p align="center">
-  <img src="assets/nanoclaw-logo.png" alt="NanoClaw" width="400">
-</p>
+# NanoClaw Society 🌍🤖
 
-<p align="center">
-  My personal Claude assistant that runs securely in containers. Lightweight and built to be understood and customized for your own needs.
-</p>
+A fully autonomous, multi-agent 2D simulation built on top of the **NanoClaw** foundational architecture. Watch entirely AI-driven agents explore, interact, trade, and attack each other on a live digital canvas, all powered by open-source Large Language Models (LLMs) running locally via **Ollama**.
 
-<p align="center">
-  <a href="https://nanoclaw.dev">nanoclaw.dev</a>&nbsp; • &nbsp;
-  <a href="README_zh.md">中文</a>&nbsp; • &nbsp;
-  <a href="https://discord.gg/VDdww8qS42"><img src="https://img.shields.io/discord/1470188214710046894?label=Discord&logo=discord&v=2" alt="Discord" valign="middle"></a>&nbsp; • &nbsp;
-  <a href="repo-tokens"><img src="repo-tokens/badge.svg" alt="34.9k tokens, 17% of context window" valign="middle"></a>
-</p>
+---
 
-**New:** First AI assistant to support [Agent Swarms](https://code.claude.com/docs/en/agent-teams). Spin up teams of agents that collaborate in your chat.
+## 🚀 Features
 
-## Why I Built This
+- **Live Multi-Agent Simulation**: A 60FPS deterministic physics engine built in Node.js where agents gather resources, manage energy constraints, and act on visual impulses.
+- **Cognitive LLM Brains**: The entire decision-making process for every single agent is outsourced asynchronously to local LLMs like `llama3.2` and `gemma3`. No deterministic state-machines!
+- **Dynamic User Interface**: Built with React and Vite, featuring complex `Math.round` UI jitter elimination, dynamic auto-scaling thought bubbles (chat payloads), and realtime socket synchronization.
+- **Interactive Control Panel**: Speed up or literally pause time natively. You can dial your tick-rate between `0.01x` for extreme slow motion inspection of AI thought trails, all the way up to `2.0x`.
+- **Three Core Behavioral Modes**: Hot-swap the universe rules between `Cooperative`, `Competitive`, and `Survival` to immediately shock the agents into shifting their internal heuristics and strategies.
 
-[OpenClaw](https://github.com/openclaw/openclaw) is an impressive project with a great vision. But I can't sleep well running software I don't understand with access to my life. OpenClaw has 52+ modules, 8 config management files, 45+ dependencies, and abstractions for 15 channel providers. Security is application-level (allowlists, pairing codes) rather than OS isolation. Everything runs in one Node process with shared memory.
+---
 
-NanoClaw gives you the same core functionality in a codebase you can understand in 8 minutes. One process. A handful of files. Agents run in actual Linux containers with filesystem isolation, not behind permission checks.
+## 🏗️ Architecture Stack
 
-## Quick Start
+The simulation is intentionally decoupled into three separate runtime loops to ensure that large, blocking LLM generation loops do not stutter the live visual simulation:
 
-```bash
-git clone https://github.com/qwibitai/nanoclaw.git
-cd nanoclaw
-claude
+```mermaid
+graph TD;
+    A[Society Engine \nNode.js / 60Hz deterministic tick] -->|Broadcasts State via Socket.IO| B[React UI Canvas Map];
+    A -->|Broadcasts State via REST API| C[Agent Runner Orchestrator];
+    C -->|Constructs JSON System Prompts| D[Local Ollama Inference];
+    D -->|Parses generated strict JSON| C;
+    C -->|POSTs HTTP Intents back| A;
 ```
 
-Then run `/setup`. Claude Code handles everything: dependencies, authentication, container setup, service configuration.
+1. **Engine Layer** (`society/engine/`): A lightweight, memory-efficient background simulator handling collision bounds, energy decay, movement physics, and WebSockets.
+2. **Cognitive Layer** (`society/agents/`): An asynchronous orchestrator that continuously polls the universe state, feeds context (nearby agents, distances, mode, and factions) to local LLM engines, parses their response (with fallbacks if the LLM hallucinates non-JSON), and emits specific `Intents` back to the Engine.
+3. **Visual Layer** (`society/ui`): A beautiful, glowing, dark-mode Canvas UI that smooths out server tick updates into pleasant visual animations, rendering confidence drop shadows and thought bubbles dynamically based on internal states.
 
-## Philosophy
+---
 
-**Small enough to understand.** One process, a few source files. No microservices, no message queues, no abstraction layers. Have Claude Code walk you through it.
+## 🔧 Installation & Setup
 
-**Secure by isolation.** Agents run in Linux containers (Apple Container on macOS, or Docker). They can only see what's explicitly mounted. Bash access is safe because commands run inside the container, not on your host.
+### Prerequisites
+1. **Node.js** (v18+)
+2. **Ollama** installed on your machine (`ollama.com`).
+3. You must pull at least one fast, local LLM to your machine before running. For example: `ollama run llama3.2` or `ollama run gemma3:4b`. (Note: The engine expressly filters out models that struggle with strict zero-shot JSON output, such as `qwen`).
 
-**Built for one user.** This isn't a framework. It's working software that fits my exact needs. You fork it and have Claude Code make it match your exact needs.
+### Booting the Demo
+1. Clone the repository and navigate to the project directory.
+2. Install the core dependencies in the root:
+   ```bash
+   npm install tsx concurrently --save-dev
+   ```
+3. Open a separate terminal inside `society/ui` and install the frontend dependencies:
+   ```bash
+   cd society/ui
+   npm install
+   ```
+4. Run the master unified script which spins up the backend engine, the Vite frontend, and the cognitive brain loop all at once:
+   ```bash
+   npm run demo
+   ```
+5. Open your browser to `http://localhost:5173` if it doesn't open automatically!
 
-**Customization = code changes.** No configuration sprawl. Want different behavior? Modify the code. The codebase is small enough that this is safe.
+---
 
-**AI-native.** No installation wizard; Claude Code guides setup. No monitoring dashboard; ask Claude what's happening. No debugging tools; describe the problem, Claude fixes it.
+## 🛠️ Modding & Expanding
 
-**Skills over features.** Contributors shouldn't add features (e.g. support for Telegram) to the codebase. Instead, they contribute [claude code skills](https://code.claude.com/docs/en/skills) like `/add-telegram` that transform your fork. You end up with clean code that does exactly what you need.
-
-**Best harness, best model.** This runs on Claude Agent SDK, which means you're running Claude Code directly. The harness matters. A bad harness makes even smart models seem dumb, a good harness gives them superpowers. Claude Code is (IMO) the best harness available.
-
-## What It Supports
-
-- **WhatsApp I/O** - Message Claude from your phone
-- **Isolated group context** - Each group has its own `CLAUDE.md` memory, isolated filesystem, and runs in its own container sandbox with only that filesystem mounted
-- **Main channel** - Your private channel (self-chat) for admin control; every other group is completely isolated
-- **Scheduled tasks** - Recurring jobs that run Claude and can message you back
-- **Web access** - Search and fetch content
-- **Container isolation** - Agents sandboxed in Apple Container (macOS) or Docker (macOS/Linux)
-- **Agent Swarms** - Spin up teams of specialized agents that collaborate on complex tasks (first personal AI assistant to support this)
-- **Optional integrations** - Add Gmail (`/add-gmail`) and more via skills
-
-## Usage
-
-Talk to your assistant with the trigger word (default: `@Andy`):
-
-```
-@Andy send an overview of the sales pipeline every weekday morning at 9am (has access to my Obsidian vault folder)
-@Andy review the git history for the past week each Friday and update the README if there's drift
-@Andy every Monday at 8am, compile news on AI developments from Hacker News and TechCrunch and message me a briefing
-```
-
-From the main channel (your self-chat), you can manage groups and tasks:
-```
-@Andy list all scheduled tasks across groups
-@Andy pause the Monday briefing task
-@Andy join the Family Chat group
-```
-
-## Customizing
-
-There are no configuration files to learn. Just tell Claude Code what you want:
-
-- "Change the trigger word to @Bob"
-- "Remember in the future to make responses shorter and more direct"
-- "Add a custom greeting when I say good morning"
-- "Store conversation summaries weekly"
-
-Or run `/customize` for guided changes.
-
-The codebase is small enough that Claude can safely modify it.
-
-## Contributing
-
-**Don't add features. Add skills.**
-
-If you want to add Telegram support, don't create a PR that adds Telegram alongside WhatsApp. Instead, contribute a skill file (`.claude/skills/add-telegram/SKILL.md`) that teaches Claude Code how to transform a NanoClaw installation to use Telegram.
-
-Users then run `/add-telegram` on their fork and get clean code that does exactly what they need, not a bloated system trying to support every use case.
-
-### RFS (Request for Skills)
-
-Skills we'd love to see:
-
-**Communication Channels**
-- `/add-telegram` - Add Telegram as channel. Should give the user option to replace WhatsApp or add as additional channel. Also should be possible to add it as a control channel (where it can trigger actions) or just a channel that can be used in actions triggered elsewhere
-- `/add-slack` - Add Slack
-- `/add-discord` - Add Discord
-
-**Platform Support**
-- `/setup-windows` - Windows via WSL2 + Docker
-
-**Session Management**
-- `/add-clear` - Add a `/clear` command that compacts the conversation (summarizes context while preserving critical information in the same session). Requires figuring out how to trigger compaction programmatically via the Claude Agent SDK.
-
-## Requirements
-
-- macOS or Linux
-- Node.js 20+
-- [Claude Code](https://claude.ai/download)
-- [Apple Container](https://github.com/apple/container) (macOS) or [Docker](https://docker.com/products/docker-desktop) (macOS/Linux)
-
-## Architecture
-
-```
-WhatsApp (baileys) --> SQLite --> Polling loop --> Container (Claude Agent SDK) --> Response
-```
-
-Single Node.js process. Agents execute in isolated Linux containers with mounted directories. Per-group message queue with concurrency control. IPC via filesystem.
-
-Key files:
-- `src/index.ts` - Orchestrator: state, message loop, agent invocation
-- `src/channels/whatsapp.ts` - WhatsApp connection, auth, send/receive
-- `src/ipc.ts` - IPC watcher and task processing
-- `src/router.ts` - Message formatting and outbound routing
-- `src/group-queue.ts` - Per-group queue with global concurrency limit
-- `src/container-runner.ts` - Spawns streaming agent containers
-- `src/task-scheduler.ts` - Runs scheduled tasks
-- `src/db.ts` - SQLite operations (messages, groups, sessions, state)
-- `groups/*/CLAUDE.md` - Per-group memory
-
-## FAQ
-
-**Why WhatsApp and not Telegram/Signal/etc?**
-
-Because I use WhatsApp. Fork it and run a skill to change it. That's the whole point.
-
-**Why Docker?**
-
-Docker provides cross-platform support (macOS and Linux) and a mature ecosystem. On macOS, you can optionally switch to Apple Container via `/convert-to-apple-container` for a lighter-weight native runtime.
-
-**Can I run this on Linux?**
-
-Yes. Docker is the default runtime and works on both macOS and Linux. Just run `/setup`.
-
-**Is this secure?**
-
-Agents run in containers, not behind application-level permission checks. They can only access explicitly mounted directories. You should still review what you're running, but the codebase is small enough that you actually can. See [docs/SECURITY.md](docs/SECURITY.md) for the full security model.
-
-**Why no configuration files?**
-
-We don't want configuration sprawl. Every user should customize it to so that the code matches exactly what they want rather than configuring a generic system. If you like having config files, tell Claude to add them.
-
-**How do I debug issues?**
-
-Ask Claude Code. "Why isn't the scheduler running?" "What's in the recent logs?" "Why did this message not get a response?" That's the AI-native approach.
-
-**Why isn't the setup working for me?**
-
-I don't know. Run `claude`, then run `/debug`. If claude finds an issue that is likely affecting other users, open a PR to modify the setup SKILL.md.
-
-**What changes will be accepted into the codebase?**
-
-Security fixes, bug fixes, and clear improvements to the base configuration. That's it.
-
-Everything else (new capabilities, OS compatibility, hardware support, enhancements) should be contributed as skills.
-
-This keeps the base system minimal and lets every user customize their installation without inheriting features they don't want.
-
-## Community
-
-Questions? Ideas? [Join the Discord](https://discord.gg/VDdww8qS42).
-
-## License
-
-MIT
+- **Injecting your own AI**: To swap the decision-engine backend with OpenAI, Anthropic, or groq, simply modify the `fetch()` blocks inside `society/agents/AgentRunner.ts`. Just ensure your custom pipeline returns the expected strict JSON `Intent` schema!
+- **Altering the Universe**: Open `society/engine/World.ts` and modify the `tick()` function to implement new physics (like gravity, hostile zones, or resource decay mechanics). The UI will naturally render any state updates you broadcast out.

@@ -1,8 +1,15 @@
 # Dependencies
 node_modules/
+society/ui/node_modules/
 
 # Build output
 dist/
+society/ui/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Local data & auth
 store/
@@ -33,3 +40,8 @@ groups/global/*
 .nanoclaw/
 
 agents-sdk-docs
+
+LINKEDIN.md
+BLOG.md
+DEMO_GUIDE.md
+X_THREAD.md
