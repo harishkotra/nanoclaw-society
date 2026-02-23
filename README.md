@@ -2,6 +2,12 @@
 
 A fully autonomous, multi-agent 2D simulation built on top of the **NanoClaw** foundational architecture. Watch entirely AI-driven agents explore, interact, trade, and attack each other on a live digital canvas, all powered by open-source Large Language Models (LLMs) running locally via **Ollama**.
 
+
+<img width="1810" height="1513" alt="screencapture-localhost-5173-2026-02-23-06_55_58" src="https://github.com/user-attachments/assets/711f64ac-ac5e-48c7-af90-fc822637e2e7" />
+<img width="1810" height="2029" alt="screencapture-localhost-5173-2026-02-23-06_56_12" src="https://github.com/user-attachments/assets/725a53ac-eb59-4676-a745-a25fb2fb64ba" />
+<img width="1793" height="991" alt="Screenshot at Feb 23 06-56-54" src="https://github.com/user-attachments/assets/2c0718c6-2e92-4cb8-ba8a-75436a6b6de1" />
+<img width="1807" height="991" alt="Screenshot at Feb 23 06-57-14" src="https://github.com/user-attachments/assets/a582e2e1-f500-458a-aa58-23539030902d" />
+
 ---
 
 ## 🚀 Features
